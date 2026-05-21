@@ -1,0 +1,17 @@
+# NetBeans
+build/
+dist/
+.gradle/
+*.jar
+*.class
+*.log
+.DS_Store
+.classpath
+.project
+.settings/
+*.swp
+*.swo
+*~
+.idea/
+*.iml
+nbproject/private/
