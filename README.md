@@ -1,73 +1,111 @@
-# MemoryProject
+# MemoryProject - Complete Memory Game
 
-A Memory Game implementation in Java Swing (incomplete)
+A fully functional Memory Game implementation in Java Swing.
 
 ## Overview
 
-This is an incomplete Memory Game project created with NetBeans. The GUI is set up with 12 buttons arranged in a 4x3 grid, but the core game logic needs to be implemented.
+This is a complete Memory Game with 12 cards (6 pairs) where players must find matching pairs by clicking on cards. The game features a graphical UI built with Java Swing.
 
-## Current Status
+## Features
 
-### Implemented:
-- ✅ GUI with 12 memory buttons (120x120 pixels)
-- ✅ Quit button (functional)
-- ✅ Window frame and layout
-- ✅ Event listeners connected to all buttons
+✅ **Implemented:**
+- 12 memory cards (4×3 grid, 120×120 pixels each)
+- 6 matching pairs (numbers 1-6)
+- Automatic card shuffling at game start
+- Click-based card reveal system
+- Match detection with feedback
+- Visual feedback:
+  - `?` for hidden cards
+  - Number for revealed cards
+  - `✓` for matched pairs (green background)
+- 1-second delay between card flips
+- Win condition detection
+- Pair counter display
+- Quit button
+- Auto-reset on win
 
-### Not Implemented:
-- ❌ Game logic (card matching)
-- ❌ Card state tracking (revealed/hidden)
-- ❌ Shuffle and pair system
-- ❌ Win condition
-- ❌ Visual feedback on button clicks
+## Game Logic
+
+### How to Play:
+1. Click on any card to reveal it
+2. Click on a second card
+3. If the cards match → they stay revealed with a green background and `✓`
+4. If they don't match → they flip back after 1 second
+5. Find all 6 pairs to win!
 
 ## Project Structure
 
 ```
 MemoryProject/
-├── src/
-│   └── recources/
-│       └── MemoryProject.java
-├── nbproject/
-├── build.xml
-├── manifest.mf
-└── build/
+├── src/recources/
+│   ├── MemoryProject.java      # Main GUI class
+│   ├── GameLogic.java          # Game logic and state management
+│   └── Card.java               # Card model class
+├── nbproject/                  # NetBeans project files
+├── build/                      # Compiled classes
+├── build.xml                   # Ant build script
+└── manifest.mf                 # JAR manifest
 ```
+
+## Classes
+
+### Card.java
+- Represents a single card with value, revealed state, and matched state
+- Properties: value, revealed, matched
+
+### GameLogic.java
+- Manages game state and logic
+- Creates and shuffles 6 pairs of cards
+- Handles card clicks and match checking
+- Detects win condition
+- Methods:
+  - `handleCardClick(int)` - Process card click
+  - `checkMatch()` - Verify if two cards match
+  - `isGameWon()` - Check win condition
+  - `resetGame()` - Reset for new game
+
+### MemoryProject.java
+- GUI frame with 12 buttons
+- Integrates GameLogic
+- Handles visual updates and user interaction
 
 ## Build & Run
 
-### Using NetBeans:
-1. Open the project in NetBeans
-2. Press `F6` to run
-
-### Using Command Line:
+### Using Java Compiler Directly:
 ```bash
-ant run
+cd src/recources
+javac -source 21 -target 21 -d ../../build/classes *.java
+cd ../.. 
+java -cp build/classes recources.MemoryProject
 ```
 
-## What Needs to Be Done
+### Using NetBeans:
+1. Open the project
+2. Press `F6` to run
 
-1. **Create Game Logic Class**
-   - Array to store card pairs (6 pairs, 12 cards total)
-   - Shuffle logic
-   - State tracking (revealed/hidden)
+## Requirements
+- Java 21 or compatible version
+- No external dependencies (uses only javax.swing)
 
-2. **Implement Card Click Handlers**
-   - Track first and second card clicks
-   - Check for matches
-   - Handle reveal/hide with delay
-   - Disable buttons during verification
+## Game Screenshots
 
-3. **Add Visual Feedback**
-   - Display card values (numbers or symbols)
-   - Change button appearance when revealed
-   - Show matched pairs
+- **Hidden State**: Cards show `?`
+- **Revealed State**: Cards show their number (1-6)
+- **Matched State**: Cards show `✓` with green background and are disabled
 
-4. **Win Condition**
-   - Detect when all pairs are found
-   - Display victory message
-   - Option to play again
+## Future Enhancements
+
+- [ ] Difficulty levels (different grid sizes)
+- [ ] Timer/Score tracking
+- [ ] Sound effects
+- [ ] Themes/Skins
+- [ ] Leaderboard
+- [ ] Card flip animation
 
 ## Author
 
 Valentino Amori
+
+## License
+
+MIT

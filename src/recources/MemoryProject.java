@@ -1,14 +1,29 @@
 package recources;
 
+import javax.swing.*;
+import javax.swing.Timer;
 
 public class MemoryProject extends javax.swing.JFrame {
-    
-
+    private GameLogic gameLogic;
+    private javax.swing.JButton[] cardButtons;
+    private final int DELAY_TIME = 1000; // 1 second delay
+    private boolean gameWon = false;
 
     public MemoryProject() {
+        gameLogic = new GameLogic();
         initComponents();
         setLocationRelativeTo(null);
-        setTitle("MemoryProject");
+        setTitle("Valememory");
+        setupCardButtons();
+        updateDisplay();
+    }
+    
+    private void setupCardButtons() {
+        cardButtons = new javax.swing.JButton[]{
+            bMemory1, bMemory2, bMemory3, bMemory4,
+            bMemory5, bMemory6, bMemory7, bMemory8,
+            bMemory9, bMemory10, bMemory11, bMemory12
+        };
     }
 
 
@@ -213,7 +228,7 @@ public class MemoryProject extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void bMemory1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bMemory1ActionPerformed
-        // TODO add your handling code here:
+        handleCardClick(0);
     }//GEN-LAST:event_bMemory1ActionPerformed
 
     private void bQuitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bQuitActionPerformed
@@ -221,48 +236,114 @@ public class MemoryProject extends javax.swing.JFrame {
     }//GEN-LAST:event_bQuitActionPerformed
 
     private void bMemory2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bMemory2ActionPerformed
-        
+        handleCardClick(1);
     }//GEN-LAST:event_bMemory2ActionPerformed
 
     private void bMemory4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bMemory4ActionPerformed
-        
+        handleCardClick(3);
     }//GEN-LAST:event_bMemory4ActionPerformed
  
     private void bMemory5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bMemory5ActionPerformed
-        // TODO add your handling code here:
+        handleCardClick(4);
     }//GEN-LAST:event_bMemory5ActionPerformed
 
     private void bMemory3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bMemory3ActionPerformed
-        // TODO add your handling code here:
+        handleCardClick(2);
     }//GEN-LAST:event_bMemory3ActionPerformed
 
     private void bMemory6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bMemory6ActionPerformed
-        // TODO add your handling code here:
+        handleCardClick(5);
     }//GEN-LAST:event_bMemory6ActionPerformed
 
     private void bMemory7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bMemory7ActionPerformed
-        // TODO add your handling code here:
+        handleCardClick(6);
     }//GEN-LAST:event_bMemory7ActionPerformed
 
     private void bMemory8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bMemory8ActionPerformed
-        // TODO add your handling code here:
+        handleCardClick(7);
     }//GEN-LAST:event_bMemory8ActionPerformed
 
     private void bMemory9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bMemory9ActionPerformed
-        // TODO add your handling code here:
+        handleCardClick(8);
     }//GEN-LAST:event_bMemory9ActionPerformed
 
     private void bMemory10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bMemory10ActionPerformed
-        // TODO add your handling code here:
+        handleCardClick(9);
     }//GEN-LAST:event_bMemory10ActionPerformed
 
     private void bMemory11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bMemory11ActionPerformed
-        // TODO add your handling code here:
+        handleCardClick(10);
     }//GEN-LAST:event_bMemory11ActionPerformed
 
     private void bMemory12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bMemory12ActionPerformed
-        // TODO add your handling code here:
+        handleCardClick(11);
     }//GEN-LAST:event_bMemory12ActionPerformed
+
+    private void handleCardClick(int index) {
+        if (gameWon || gameLogic.isChecking()) {
+            return;
+        }
+
+        if (!gameLogic.handleCardClick(index)) {
+            return;
+        }
+
+        updateDisplay();
+
+        if (!gameLogic.isChecking()) {
+            return; // First card, wait for second
+        }
+
+        // Both cards clicked, check after delay
+        Timer timer = new Timer(DELAY_TIME, e -> {
+            int result = gameLogic.checkMatch();
+            updateDisplay();
+
+            if (result == 1) {
+                JOptionPane.showMessageDialog(null, "Match Found! " + gameLogic.getMatchedPairs() + "/6");
+                if (gameLogic.isGameWon()) {
+                    gameWon = true;
+                    JOptionPane.showMessageDialog(this, "🎉 You Won! All pairs found!");
+                    resetGame();
+                }
+            } else if (result == -1) {
+                JOptionPane.showMessageDialog(null, "No match. Try again!");
+            }
+        });
+        timer.setRepeats(false);
+        timer.start();
+    }
+
+    private void updateDisplay() {
+        for (int i = 0; i < 12; i++) {
+            Card card = gameLogic.getCard(i);
+            javax.swing.JButton btn = cardButtons[i];
+            
+            if (card.isMatched()) {
+                btn.setText("✓");
+                btn.setEnabled(false);
+                btn.setBackground(new java.awt.Color(144, 238, 144)); // Light green
+                btn.setOpaque(true);
+            } else if (card.isRevealed()) {
+                btn.setText(String.valueOf(card.getValue()));
+                btn.setEnabled(true);
+                btn.setBackground(new java.awt.Color(173, 216, 230)); // Light blue
+                btn.setOpaque(true);
+            } else {
+                btn.setText("?");
+                btn.setEnabled(true);
+                btn.setBackground(javax.swing.UIManager.getColor("Button.background"));
+                btn.setOpaque(false);
+            }
+        }
+        jLabel1.setText("Valememory - Pairs: " + gameLogic.getMatchedPairs() + "/6");
+    }
+
+    private void resetGame() {
+        gameLogic.resetGame();
+        gameWon = false;
+        updateDisplay();
+    }
 
     
     public static void main(String args[]) {
