@@ -2,20 +2,60 @@ package recources;
 
 import javax.swing.*;
 import javax.swing.Timer;
+import java.util.Random;
 
 public class MemoryProject extends javax.swing.JFrame {
-    private GameLogic gameLogic;
+    // Game state using simple arrays
+    private int[] cardValues = new int[12];           // Card values (1-6)
+    private boolean[] cardRevealed = new boolean[12]; // Revealed state
+    private boolean[] cardMatched = new boolean[12];  // Matched state
+    
     private javax.swing.JButton[] cardButtons;
     private final int DELAY_TIME = 1000; // 1 second delay
+    private int firstCardIndex = -1;
+    private int secondCardIndex = -1;
+    private boolean isChecking = false;
+    private int matchedPairs = 0;
     private boolean gameWon = false;
 
     public MemoryProject() {
-        gameLogic = new GameLogic();
+        initializeGame();
         initComponents();
         setLocationRelativeTo(null);
         setTitle("Valememory");
         setupCardButtons();
         updateDisplay();
+    }
+    
+    private void initializeGame() {
+        // Create 6 pairs (values 1-6, each appearing twice)
+        int[] values = new int[12];
+        int index = 0;
+        for (int i = 1; i <= 6; i++) {
+            values[index++] = i;
+            values[index++] = i;
+        }
+        
+        // Shuffle the values
+        Random random = new Random();
+        for (int i = values.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            int temp = values[i];
+            values[i] = values[j];
+            values[j] = temp;
+        }
+        
+        // Initialize card state arrays
+        for (int i = 0; i < 12; i++) {
+            cardValues[i] = values[i];
+            cardRevealed[i] = false;
+            cardMatched[i] = false;
+        }
+        
+        firstCardIndex = -1;
+        secondCardIndex = -1;
+        isChecking = false;
+        matchedPairs = 0;
     }
     
     private void setupCardButtons() {
@@ -280,52 +320,78 @@ public class MemoryProject extends javax.swing.JFrame {
     }//GEN-LAST:event_bMemory12ActionPerformed
 
     private void handleCardClick(int index) {
-        if (gameWon || gameLogic.isChecking()) {
+        if (gameWon || isChecking) {
             return;
         }
 
-        if (!gameLogic.handleCardClick(index)) {
+        // Can't click on already matched or revealed cards
+        if (cardMatched[index] || cardRevealed[index]) {
             return;
         }
 
-        updateDisplay();
+        cardRevealed[index] = true;
 
-        if (!gameLogic.isChecking()) {
-            return; // First card, wait for second
-        }
-
-        // Both cards clicked, check after delay
-        Timer timer = new Timer(DELAY_TIME, e -> {
-            int result = gameLogic.checkMatch();
+        if (firstCardIndex == -1) {
+            // First card clicked
+            firstCardIndex = index;
+            updateDisplay();
+            return;
+        } else if (secondCardIndex == -1) {
+            // Second card clicked
+            secondCardIndex = index;
+            isChecking = true;
             updateDisplay();
 
-            if (result == 1) {
-                JOptionPane.showMessageDialog(null, "Match Found! " + gameLogic.getMatchedPairs() + "/6");
-                if (gameLogic.isGameWon()) {
-                    gameWon = true;
-                    JOptionPane.showMessageDialog(this, "🎉 You Won! All pairs found!");
-                    resetGame();
+            // Both cards clicked, check after delay
+            Timer timer = new Timer(DELAY_TIME, e -> {
+                checkMatch();
+                updateDisplay();
+
+                if (cardMatched[firstCardIndex] && cardMatched[secondCardIndex]) {
+                    JOptionPane.showMessageDialog(null, "Match Found! " + matchedPairs + "/6");
+                    if (matchedPairs == 6) {
+                        gameWon = true;
+                        JOptionPane.showMessageDialog(this, "🎉 You Won! All pairs found!");
+                        resetGame();
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "No match. Try again!");
                 }
-            } else if (result == -1) {
-                JOptionPane.showMessageDialog(null, "No match. Try again!");
-            }
-        });
-        timer.setRepeats(false);
-        timer.start();
+            });
+            timer.setRepeats(false);
+            timer.start();
+        }
+    }
+
+    private void checkMatch() {
+        if (cardValues[firstCardIndex] == cardValues[secondCardIndex]) {
+            // Match found
+            cardMatched[firstCardIndex] = true;
+            cardMatched[secondCardIndex] = true;
+            matchedPairs++;
+        } else {
+            // No match - hide cards
+            cardRevealed[firstCardIndex] = false;
+            cardRevealed[secondCardIndex] = false;
+        }
+
+        // Reset for next turn
+        firstCardIndex = -1;
+        secondCardIndex = -1;
+        isChecking = false;
     }
 
     private void updateDisplay() {
         for (int i = 0; i < 12; i++) {
-            Card card = gameLogic.getCard(i);
             javax.swing.JButton btn = cardButtons[i];
             
-            if (card.isMatched()) {
+            if (cardMatched[i]) {
                 btn.setText("✓");
                 btn.setEnabled(false);
                 btn.setBackground(new java.awt.Color(144, 238, 144)); // Light green
                 btn.setOpaque(true);
-            } else if (card.isRevealed()) {
-                btn.setText(String.valueOf(card.getValue()));
+            } else if (cardRevealed[i]) {
+                btn.setText(String.valueOf(cardValues[i]));
                 btn.setEnabled(true);
                 btn.setBackground(new java.awt.Color(173, 216, 230)); // Light blue
                 btn.setOpaque(true);
@@ -336,11 +402,11 @@ public class MemoryProject extends javax.swing.JFrame {
                 btn.setOpaque(false);
             }
         }
-        jLabel1.setText("Valememory - Pairs: " + gameLogic.getMatchedPairs() + "/6");
+        jLabel1.setText("Valememory - Pairs: " + matchedPairs + "/6");
     }
 
     private void resetGame() {
-        gameLogic.resetGame();
+        initializeGame();
         gameWon = false;
         updateDisplay();
     }
