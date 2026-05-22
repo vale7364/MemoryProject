@@ -5,10 +5,9 @@ import javax.swing.Timer;
 import java.util.Random;
 
 public class MemoryProject extends javax.swing.JFrame {
-    // Game state using simple arrays
-    private int[] cardValues = new int[12];           // Card values (1-6)
-    private boolean[] cardRevealed = new boolean[12]; // Revealed state
-    private boolean[] cardMatched = new boolean[12];  // Matched state
+    // Game state using 2 simple arrays
+    private int[] cardNumbers = new int[12];  // Card values (1-6)
+    private int[] cardState = new int[12];    // 0=hidden, 1=revealed, 2=matched
     
     private javax.swing.JButton[] cardButtons;
     private final int DELAY_TIME = 1000; // 1 second delay
@@ -47,9 +46,8 @@ public class MemoryProject extends javax.swing.JFrame {
         
         // Initialize card state arrays
         for (int i = 0; i < 12; i++) {
-            cardValues[i] = values[i];
-            cardRevealed[i] = false;
-            cardMatched[i] = false;
+            cardNumbers[i] = values[i];
+            cardState[i] = 0; // 0 = hidden
         }
         
         firstCardIndex = -1;
@@ -325,11 +323,11 @@ public class MemoryProject extends javax.swing.JFrame {
         }
 
         // Can't click on already matched or revealed cards
-        if (cardMatched[index] || cardRevealed[index]) {
+        if (cardState[index] != 0) {
             return;
         }
 
-        cardRevealed[index] = true;
+        cardState[index] = 1;
 
         if (firstCardIndex == -1) {
             // First card clicked
@@ -347,7 +345,7 @@ public class MemoryProject extends javax.swing.JFrame {
                 checkMatch();
                 updateDisplay();
 
-                if (cardMatched[firstCardIndex] && cardMatched[secondCardIndex]) {
+                if (cardState[firstCardIndex] == 2 && cardState[secondCardIndex] == 2) {
                     JOptionPane.showMessageDialog(null, "Match Found! " + matchedPairs + "/6");
                     if (matchedPairs == 6) {
                         gameWon = true;
@@ -364,15 +362,15 @@ public class MemoryProject extends javax.swing.JFrame {
     }
 
     private void checkMatch() {
-        if (cardValues[firstCardIndex] == cardValues[secondCardIndex]) {
+        if (cardNumbers[firstCardIndex] == cardNumbers[secondCardIndex]) {
             // Match found
-            cardMatched[firstCardIndex] = true;
-            cardMatched[secondCardIndex] = true;
+            cardState[firstCardIndex] = 2;
+            cardState[secondCardIndex] = 2;
             matchedPairs++;
         } else {
             // No match - hide cards
-            cardRevealed[firstCardIndex] = false;
-            cardRevealed[secondCardIndex] = false;
+            cardState[firstCardIndex] = 0;
+            cardState[secondCardIndex] = 0;
         }
 
         // Reset for next turn
@@ -385,13 +383,13 @@ public class MemoryProject extends javax.swing.JFrame {
         for (int i = 0; i < 12; i++) {
             javax.swing.JButton btn = cardButtons[i];
             
-            if (cardMatched[i]) {
+            if (cardState[i] == 2) {
                 btn.setText("✓");
                 btn.setEnabled(false);
                 btn.setBackground(new java.awt.Color(144, 238, 144)); // Light green
                 btn.setOpaque(true);
-            } else if (cardRevealed[i]) {
-                btn.setText(String.valueOf(cardValues[i]));
+            } else if (cardState[i] == 1) {
+                btn.setText(String.valueOf(cardNumbers[i]));
                 btn.setEnabled(true);
                 btn.setBackground(new java.awt.Color(173, 216, 230)); // Light blue
                 btn.setOpaque(true);
