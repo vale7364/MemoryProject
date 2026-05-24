@@ -5,17 +5,21 @@ import java.awt.*;
 import java.util.Random;
 
 public class MemoryGame extends JFrame {
-    // Game state - only 2 arrays
+    // Game state - only 2 arrays are needed here:
+    //  1) cardNumbers stores the hidden values of each card,
+    //     where each number appears exactly twice.
+    //  2) cardState stores whether a card is hidden, revealed, or matched.
     private int[] cardNumbers = new int[12];    // Card values (1-6)
     private int[] cardState = new int[12];      // 0=hidden, 1=revealed, 2=matched
     
     private JButton[] buttons = new JButton[12];
     private JLabel statusLabel;
     
+    // Track the currently flipped cards for a pair check.
     private int firstCard = -1;
     private int secondCard = -1;
-    private boolean isChecking = false;
-    private int matchedPairs = 0;
+    private boolean isChecking = false; // Prevent clicks while checking a pair.
+    private int matchedPairs = 0;      // Count how many pairs have been found.
 
     public MemoryGame() {
         initializeGame();
@@ -29,7 +33,7 @@ public class MemoryGame extends JFrame {
     }
 
     private void initializeGame() {
-        // Create 6 pairs (1-6, each twice)
+        // Build the list of card values: 6 pairs numbered 1 through 6.
         int[] values = new int[12];
         int index = 0;
         for (int i = 1; i <= 6; i++) {
@@ -37,7 +41,7 @@ public class MemoryGame extends JFrame {
             values[index++] = i;
         }
         
-        // Shuffle
+        // Shuffle the card values so the board is randomized.
         Random rand = new Random();
         for (int i = 11; i > 0; i--) {
             int j = rand.nextInt(i + 1);
@@ -46,12 +50,13 @@ public class MemoryGame extends JFrame {
             values[j] = temp;
         }
         
-        // Initialize arrays
+        // Store the shuffled values and hide all cards initially.
         for (int i = 0; i < 12; i++) {
             cardNumbers[i] = values[i];
             cardState[i] = 0; // 0 = hidden
         }
         
+        // Reset any previously selected cards and matched pair count.
         firstCard = -1;
         secondCard = -1;
         isChecking = false;
@@ -90,24 +95,30 @@ public class MemoryGame extends JFrame {
     }
 
     private void handleClick(int index) {
+        // Ignore clicks while the game is checking a previous pair
+        // or if the game is already complete.
         if (matchedPairs == 6 || isChecking) {
             return;
         }
         
-        // Can't click matched or already revealed cards
+        // Ignore clicks on cards that are already matched or already revealed.
         if (cardState[index] == 2 || cardState[index] == 1) {
             return;
         }
         
-        cardState[index] = 1; // Mark as revealed
+        // Reveal the selected card.
+        cardState[index] = 1;
         updateDisplay();
         
+        // If this is the first card of the pair, remember it.
         if (firstCard == -1) {
             firstCard = index;
         } else if (secondCard == -1) {
+            // If this is the second card, schedule a match check.
             secondCard = index;
             isChecking = true;
             
+            // Allow the player to see the second card briefly before checking.
             Timer timer = new Timer(1000, e -> checkMatch());
             timer.setRepeats(false);
             timer.start();
@@ -115,24 +126,27 @@ public class MemoryGame extends JFrame {
     }
 
     private void checkMatch() {
+        // Compare the two selected cards.
         if (cardNumbers[firstCard] == cardNumbers[secondCard]) {
-            // Match!
+            // If the values match, mark both cards as permanently matched.
             cardState[firstCard] = 2;
             cardState[secondCard] = 2;
             matchedPairs++;
             JOptionPane.showMessageDialog(this, "Match Found! " + matchedPairs + "/6");
             
+            // If all pairs are matched, the player wins and the board resets.
             if (matchedPairs == 6) {
                 JOptionPane.showMessageDialog(this, "🎉 You Won!");
                 initializeGame();
             }
         } else {
-            // No match
+            // If the cards do not match, hide them again.
             cardState[firstCard] = 0;
             cardState[secondCard] = 0;
             JOptionPane.showMessageDialog(this, "No match. Try again!");
         }
         
+        // Reset selection state so the player can choose a new pair.
         firstCard = -1;
         secondCard = -1;
         isChecking = false;
@@ -140,18 +154,22 @@ public class MemoryGame extends JFrame {
     }
 
     private void updateDisplay() {
+        // Refresh each button to match its current game state.
         for (int i = 0; i < 12; i++) {
             if (cardState[i] == 2) {
+                // Matched cards stay visible as check marks and cannot be clicked again.
                 buttons[i].setText("✓");
                 buttons[i].setEnabled(false);
                 buttons[i].setBackground(new Color(144, 238, 144));
                 buttons[i].setOpaque(true);
             } else if (cardState[i] == 1) {
+                // Revealed cards show their number briefly.
                 buttons[i].setText(String.valueOf(cardNumbers[i]));
                 buttons[i].setEnabled(true);
                 buttons[i].setBackground(new Color(173, 216, 230));
                 buttons[i].setOpaque(true);
             } else {
+                // Hidden cards show a question mark.
                 buttons[i].setText("?");
                 buttons[i].setEnabled(true);
                 buttons[i].setBackground(UIManager.getColor("Button.background"));
